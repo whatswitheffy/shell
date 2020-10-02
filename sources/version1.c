@@ -79,6 +79,7 @@ void run(char **list) {
 		    }
 		    break;
                 }
+		i++;
         }
     list = realloc(list, (i + 1) * sizeof(char*));
     list[i] = NULL;
