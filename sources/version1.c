@@ -85,7 +85,7 @@ void run(char **list) {
     list[i] = NULL;
     return;
         }
-        int is_exit(char **list) {
+int is_exit(char **list) {
 	if ((strcmp(list[0], "exit") == 0) || (strcmp(list[0], "quit") == 0)) {
 		return 1;
 	} else {
@@ -105,3 +105,8 @@ int main(void) {
     }
 	return 0;
 }
+
+
+
+
+
