@@ -61,7 +61,7 @@ void free_list(char **list) {
     free(list);
 }
 
-void run(char **list) {
+void flow(char **list) {
     int i = 0, fd_input = 0, fd_output = 1;
 	while (list[i] != NULL) {
 	    if (strcmp(list[i], "<") == 0) {
