@@ -84,7 +84,7 @@ void run(char **list) {
     list = realloc(list, (i + 1) * sizeof(char*));
     list[i] = NULL;
     return;
-        }
+}
 int is_exit(char **list) {
 	if ((strcmp(list[0], "exit") == 0) || (strcmp(list[0], "quit") == 0)) {
 		return 1;
