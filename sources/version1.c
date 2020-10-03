@@ -100,7 +100,7 @@ int main(void) {
 	    free_list(list);
 	    break;
 	}
-	run(list);
+	flow(list);
 	free_list(list);
     }
 	return 0;
