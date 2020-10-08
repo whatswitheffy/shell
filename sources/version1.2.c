@@ -51,6 +51,8 @@ char **getList() {
         list[i] = getWord(&end);
         i++;
     }
+    list = (char **)realloc(list, (i + 1) * sizeof(char*));
+    list[i] = NULL;
     return list; 
 } 
 
