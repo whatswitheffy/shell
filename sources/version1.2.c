@@ -11,46 +11,48 @@
 char *getWord(char *end) {
     int i = 0;
     char ch;
-    ch = getchar();
     char *word = NULL;
 
     if (*end == '\n') {
         return NULL;
     }
+
+    ch = getchar();
+
     if (ch == '\n') {
+        *end = ch;
         return NULL;
     }
     while (i == 0 && (ch == ' ' || ch == '\t' )) { 
         ch = getchar();
         if (ch == '\n') {
+            *end = ch;
             return NULL;
         }
     }
     while (ch != ' ' && ch != '\t' && ch != '\n') {
-        word = realloc(word, (i + 1) * sizeof(char));
+        word = (char *)realloc(word, (i + 1) * sizeof(char));
         word[i] = ch;
         i++;
         ch = getchar();
     }
+    word = realloc(word, (i + 1) * sizeof(char));
     word[i] = '\0';
     *end = ch;
     return word;
 }
 
 char **getList() {
-    char end;
+    char end = 0;
     char **list = NULL;
-    char *ch = NULL;
     int i = 0;
     while (end != '\n') {
-        ch = getWord(&end);
-        i++;
         list = (char **)realloc(list, (i + 1) * sizeof(char*));
-        list[i - 1] = ch;
+        list[i] = getWord(&end);
+        i++;
     }
-    list[i] = NULL;
     return list; 
-}
+} 
 
 void freeList(char **list) {
     for (int i = 0; list[i]; i++) {
@@ -61,8 +63,12 @@ void freeList(char **list) {
 
 
 int isExit(char **list) {
-    if ((strcmp(list[0], "exit") == 0) || (strcmp(list[0], "quit") == 0)) {
-        return 1;
+    if (list[0] != NULL) {
+        if ((strcmp(list[0], "exit") == 0) || (strcmp(list[0], "quit") == 0)) {
+            return 1;
+        } else {
+            return 0;
+        }
     } else {
         return 0;
     }
@@ -115,8 +121,10 @@ int flow(char **list) {
 }
 
 int main(void) {
+    printf("SUPER EVA'S TRMNAL >>");
     char **list = getList();
     while (!isExit(list)) {
+        printf("\nSUPER EVA'S TRMNAL >>");
         flow(list);
         freeList(list);
         list = getList();
