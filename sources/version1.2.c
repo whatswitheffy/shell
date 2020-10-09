@@ -107,7 +107,6 @@ int flow(char **list) {
     if (fork() > 0) {
         wait(NULL);
     } else {
-        int tmp;
         if (fd) {
             dup2(fd, flag);
         }
