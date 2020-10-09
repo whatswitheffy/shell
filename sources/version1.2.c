@@ -118,7 +118,7 @@ int flow(char **list) {
         return 1;
     }
     if (fd) 
-        close(fd);
+    close(fd);
     fd = 0;
 }
 
