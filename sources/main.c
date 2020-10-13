@@ -76,10 +76,94 @@ int isExit(char **list) {
     }
 }
 
+void pipeForTwo(char **list, int iForP) {
+	int fdForP[2];
+	int i, k, j, p;
+    char **cmd_A, **cmd_B;
+
+	cmd_A = (char **)malloc((iForP + 1) * sizeof(char*));
+	for (i = 0; i < iForP; i++) {
+		cmd_A[i] = list[i];
+	}
+
+	cmd_A[i] = NULL;
+	i = iForP + 1;
+	while (list[i] != NULL) {
+		i++;
+    }
+
+	cmd_B = (char **)malloc((i - iForP) * sizeof(char*));
+    k = 0;
+	for (j = iForP + 1; j < i;j++) {
+		cmd_B[k] = list[j];
+        k++; 
+	}
+
+	cmd_B[k] = NULL;
+    list[iForP] = NULL;
+    iForP = 0;
+    while (list[i] != NULL) {
+        if (strcmp(list[i], "|") == 0) {
+            iForP = i;
+        }
+        i++;
+    }
+	pipe(fdForP);
+	if (fork() == 0) {
+		dup2(fdForP[1], 1);
+		close(fdForP[0]);
+		close(fdForP[1]);
+        execvp(cmd_A[0], cmd_A);
+        _exit(1);
+	}
+	if (fork() == 0) {
+		dup2(fdForP[0], 0);
+		close(fdForP[0]);
+		close(fdForP[1]);
+		execvp(cmd_B[0], cmd_B);
+        _exit(1);
+	}
+    close(fdForP[0]);
+	close(fdForP[1]);
+	wait(NULL);
+	wait(NULL);
+	return;
+}
+
+void pipeForN(char **list, int *iForP, int n) {
+    int fdForP[n][2], pid;
+    int input_fd = 0 , output_fd = 1;
+    char cmd_io_array = get_list();
+    char cmd_array = prepare_io(cmd_io_array, &input_fd, &output_fd);
+    
+    for (int i = 0; i < n ; i++) {
+        pipe (fdForP[i + 1]);
+        if (( pid = fork ()) == 0) {
+            dup2 (fd[i - 1][0], 0);
+            close (fd[i - 1][1]);
+            close (fd[i - 1][0]);
+
+            dup2 (fd[i][1], 1);
+            close (fd[i][0]);
+            close (fd[i][1]);
+
+            execvp (cmd[i][0], cmd);
+            return 1;
+            execvp ( cmd_array [i][0] , cmd_array[i]);
+        } else {
+            /* close some fds */
+            waitpid ( pid , NULL , 0);
+        }
+    }
+    /* clear heap */
+}
+
 int flow(char **list) {
     int flag = 0;
     int fd = 0;
     int i = 0;
+    int iForP = 0;
+
     while (list[i] != NULL) {
         if (strcmp(list[i], "<") == 0) {
             fd = open(list[i + 1], O_RDONLY);
@@ -101,23 +185,33 @@ int flow(char **list) {
             free(list[i + 1]);
             list[i] = NULL;
             break;
+        } else if (strcmp(list[i], "|") == 0) {
+            iForP = i;
         }
         i++;
     }
-    if (fork() > 0) {
-        wait(NULL);
+
+    if (iForP != 0) {
+        pipeForTwo(list, fd, iForP);
     } else {
-        if (fd) {
-            dup2(fd, flag);
-        }
-        if (execvp(list[0], list) < 0) {
-            perror("exec failed");
+        if (fork() > 0) {
+            wait(NULL);
+        } else {
+            int tmp;
+            if (fd) {
+                dup2(fd, flag);
+            }
+            if (execvp(list[0], list) < 0) {
+                perror("exec failed");
+                return 1;
+            }
             return 1;
         }
-        return 1;
     }
-    if (fd) 
-    close(fd);
+
+    if (fd) {
+        close(fd);
+    }
     fd = 0;
 }
 
@@ -125,7 +219,7 @@ int main(void) {
     printf("SUPER EVA'S TRMNAL >>");
     char **list = getList();
     while (!isExit(list)) {
-        printf("\nSUPER EVA'S TRMNAL >>");
+        printf("SUPER EVA'S TRMNAL >>");
         flow(list);
         freeList(list);
         list = getList();
