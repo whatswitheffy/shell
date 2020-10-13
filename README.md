@@ -5,7 +5,7 @@ A **Unix shell** is a command-line interpreter or shell that provides a command 
 # Shell writing can be divided into several steps :
 
 1. Division into lexemes 
-2. STANDARD RUNNING OF THE SOFTWARE.
+2. Standart start of the program.
 3. Redirecting the input and output.
 4. Сonveyor for two programms.
 5. Conveyor for the production number.
