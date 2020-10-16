@@ -130,39 +130,61 @@ void pipeForTwo(char **list, int iForP) {
 	return;
 }
 
+char ***getCmdArr(char **list) {
+    int i = 0;
+    char ***getCmdArr = NULL;
+    while (list[i] != NULL) {
+        if (strcmp(list[i], "|") == 0) {
+            
+        } else if 
+           
+    }
+
+    return;
+}
+
 void pipeForN(char **list, int *iForP, int n) {
     int fdForP[n][2], pid;
-    int input_fd = 0 , output_fd = 1;
-    char cmd_io_array = get_list();
-    char cmd_array = prepare_io(cmd_io_array, &input_fd, &output_fd);
-    
-    for (int i = 0; i < n ; i++) {
-        pipe (fdForP[i + 1]);
-        if (( pid = fork ()) == 0) {
-            dup2 (fd[i - 1][0], 0);
-            close (fd[i - 1][1]);
-            close (fd[i - 1][0]);
+    char ***cmd_array = ;
 
-            dup2 (fd[i][1], 1);
-            close (fd[i][0]);
-            close (fd[i][1]);
-
-            execvp (cmd[i][0], cmd);
-            return 1;
-            execvp ( cmd_array [i][0] , cmd_array[i]);
-        } else {
-            /* close some fds */
-            waitpid ( pid , NULL , 0);
+    for (int i = 0; i < n + 1; i++) {
+        if (i != n) {
+            pipe(fdForP[i]);
         }
-    }
-    /* clear heap */
+        if ((pid = fork ()) == 0) {
+            if (i != 0) {
+                dup2(fdForP[i - 1][0], 0);
+                close(fdForP[i - 1][0]);
+                close(fdForP[i - 1][1]);
+            }
+
+            if (i != n) {
+                dup2(fdForP[i][1], 1);
+            }
+            close(fdForP[i][0]);
+            close(fdForP[i][1]);
+            execvp(cmd_array[i][0], cmd_array[i]);
+        } else {
+            if (i != 0) {
+                close(fdForP[i - 1][0]);
+            }
+            close(fdForP[i][1]);
+            waitpid(pid, NULL, 0);
+        }
+    }   
 }
+
+int *background_pids = NULL;
+int background = 0;
 
 int flow(char **list) {
     int flag = 0;
     int fd = 0;
     int i = 0;
     int iForP = 0;
+   
+    int pid;
+
 
     while (list[i] != NULL) {
         if (strcmp(list[i], "<") == 0) {
@@ -172,8 +194,8 @@ int flow(char **list) {
                 perror("Open failed");
                 exit(1);
             }
-                free(list[i + 1]);
-                list[i] = NULL;
+            free(list[i + 1]);
+            list[i] = NULL;
             break;
         } else if (strcmp(list[i], ">") == 0) {
             fd = open(list[i + 1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
@@ -187,15 +209,24 @@ int flow(char **list) {
             break;
         } else if (strcmp(list[i], "|") == 0) {
             iForP = i;
+        } else if (strcmp(list[i], "&") == 0) {
+            background++;
+            free(list[i]);
+            list[i] = NULL;
+            break;
         }
         i++;
     }
 
     if (iForP != 0) {
-        pipeForTwo(list, fd, iForP);
+        pipeForTwo(list, iForP);
     } else {
-        if (fork() > 0) {
-            wait(NULL);
+        if ((pid = fork()) > 0) {
+            background_pids = realloc(background_pids, background * sizeof(int));
+            background_pids[background - 1] = pid;
+            if (background == 0) {
+                wait(NULL);
+            }
         } else {
             int tmp;
             if (fd) {
@@ -216,6 +247,8 @@ int flow(char **list) {
 }
 
 int main(void) {
+    
+
     printf("SUPER EVA'S TRMNAL >>");
     char **list = getList();
     while (!isExit(list)) {
@@ -224,6 +257,11 @@ int main(void) {
         freeList(list);
         list = getList();
     }
+    
     freeList(list);
+
+    for (int i = 0; i < background; i++) {
+        waitpid(background_pids[i], NULL, 0);
+    }
     return 0;
 }
