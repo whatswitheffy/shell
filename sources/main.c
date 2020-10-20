@@ -8,6 +8,7 @@
 #include <sys/wait.h>
 #include <err.h>
 
+pid_t pid = 1;
 char *getWord(char *end) {
     int i = 0;
     char ch;
@@ -244,11 +245,19 @@ int flow(char **list) {
     fd = 0;
 }
 
+void handler(int signo) {
+    puts("received SIGINT");
+    if(pid != 1) {
+        kill(pid, SIGINT);
+    } 
+
+}
 int main(void) {    
-    printf("SUPER EVA'S TRMNAL >>");
+    printf("SUPER EVA'S TRMNL >>");
     char **list = getList();
+    signal(SIGINT, handler);
     while (!isExit(list)) {
-        printf("SUPER EVA'S TRMNAL >>");
+        printf("SUPER EVA'S TRMNL >>");
         flow(list);
         freeList(list);
         list = getList();
