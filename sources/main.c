@@ -77,29 +77,29 @@ int isExit(char **list) {
 }
 
 void pipeForTwo(char **list, int iForP) {
-	int fdForP[2];
-	int i, k, j, p;
+    int fdForP[2];
+    int i, k, j, p;
     char **cmd_A, **cmd_B;
 
-	cmd_A = (char **)malloc((iForP + 1) * sizeof(char*));
-	for (i = 0; i < iForP; i++) {
-		cmd_A[i] = list[i];
-	}
-
-	cmd_A[i] = NULL;
-	i = iForP + 1;
-	while (list[i] != NULL) {
-		i++;
+    cmd_A = (char **)malloc((iForP + 1) * sizeof(char*));
+    for (i = 0; i < iForP; i++) {
+        cmd_A[i] = list[i];
     }
 
-	cmd_B = (char **)malloc((i - iForP) * sizeof(char*));
-    k = 0;
-	for (j = iForP + 1; j < i;j++) {
-		cmd_B[k] = list[j];
-        k++; 
-	}
+    cmd_A[i] = NULL;
+    i = iForP + 1;
+    while (list[i] != NULL) {
+        i++;
+    }
 
-	cmd_B[k] = NULL;
+    cmd_B = (char **)malloc((i - iForP) * sizeof(char*));
+    k = 0;
+    for (j = iForP + 1; j < i;j++) {
+        cmd_B[k] = list[j];
+        k++; 
+    }
+
+    cmd_B[k] = NULL;
     list[iForP] = NULL;
     iForP = 0;
     while (list[i] != NULL) {
@@ -108,45 +108,43 @@ void pipeForTwo(char **list, int iForP) {
         }
         i++;
     }
-	pipe(fdForP);
-	if (fork() == 0) {
-		dup2(fdForP[1], 1);
-		close(fdForP[0]);
-		close(fdForP[1]);
-        execvp(cmd_A[0], cmd_A);
-        _exit(1);
-	}
-	if (fork() == 0) {
-		dup2(fdForP[0], 0);
-		close(fdForP[0]);
-		close(fdForP[1]);
-		execvp(cmd_B[0], cmd_B);
-        _exit(1);
-	}
-    close(fdForP[0]);
-	close(fdForP[1]);
-	wait(NULL);
-	wait(NULL);
-	return;
 }
 
-char ***getCmdArr(char **list) {
+char ***getCmdArr(char **list, int n) {
+    int j = 0;
+    int pipePosition = 0;
+    int lstPipePos = 0;
     int i = 0;
-    char ***getCmdArr = NULL;
+    //ls -l | grep .txt | sort 
+    char ***cmdArr = NULL;
+    cmdArr = (char ***)malloc((n + 1) * sizeof(char **));
     while (list[i] != NULL) {
-        if (strcmp(list[i], "|") == 0) {
-            
-        } else if 
-           
+        if(strcmp(list[i], "|") == 0) {
+            cmdArr[j] = (char **)malloc((i - lstPipePos + 1) * sizeof(char *));
+            pipePosition = i;
+            for(int i = 0; i < pipePosition - lstPipePos; i++) { 
+                cmdArr[j][i] = list[i + lstPipePos];
+            }
+            cmdArr[j][pipePosition - lstPipePos] = NULL;
+            lstPipePos = pipePosition + 1;
+            j++; 
+        } 
+        i++; 
+    }   
+    cmdArr[j] = (char **)malloc((i - lstPipePos + 1) * sizeof(char *));
+    pipePosition = i;
+    for(int i = 0; i < pipePosition - lstPipePos; i++) { 
+        cmdArr[j][i] = list[i + lstPipePos];
     }
+    cmdArr[j][pipePosition - lstPipePos] = NULL;
 
-    return;
+    return cmdArr;
+
 }
 
-void pipeForN(char **list, int *iForP, int n) {
+void runManyCommands(char **list, int *iForP, int n) {
     int fdForP[n][2], pid;
-    char ***cmd_array = ;
-
+    char ***cmd_array = getCmdArr(list, n);
     for (int i = 0; i < n + 1; i++) {
         if (i != n) {
             pipe(fdForP[i]);
@@ -171,20 +169,21 @@ void pipeForN(char **list, int *iForP, int n) {
             close(fdForP[i][1]);
             waitpid(pid, NULL, 0);
         }
-    }   
+    }
+    
 }
 
 int *background_pids = NULL;
-int background = 0;
+int count_background = 0; 
 
 int flow(char **list) {
     int flag = 0;
     int fd = 0;
     int i = 0;
     int iForP = 0;
-   
     int pid;
-
+    int background = 0;
+    int n = 0;
 
     while (list[i] != NULL) {
         if (strcmp(list[i], "<") == 0) {
@@ -209,8 +208,9 @@ int flow(char **list) {
             break;
         } else if (strcmp(list[i], "|") == 0) {
             iForP = i;
+            n++;
         } else if (strcmp(list[i], "&") == 0) {
-            background++;
+            background = 1;
             free(list[i]);
             list[i] = NULL;
             break;
@@ -219,13 +219,15 @@ int flow(char **list) {
     }
 
     if (iForP != 0) {
-        pipeForTwo(list, iForP);
+        runManyCommands(list, &iForP, n);
     } else {
         if ((pid = fork()) > 0) {
-            background_pids = realloc(background_pids, background * sizeof(int));
-            background_pids[background - 1] = pid;
             if (background == 0) {
                 wait(NULL);
+            } else {
+                count_background++;
+                background_pids = realloc(background_pids, background * sizeof(int));
+                background_pids[count_background - 1] = pid;
             }
         } else {
             int tmp;
@@ -260,7 +262,7 @@ int main(void) {
     
     freeList(list);
 
-    for (int i = 0; i < background; i++) {
+    for (int i = 0; i < count_background; i++) {
         waitpid(background_pids[i], NULL, 0);
     }
     return 0;
