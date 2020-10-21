@@ -9,6 +9,7 @@
 #include <err.h>
 
 pid_t pid = 1;
+
 char *getWord(char *end) {
     int i = 0;
     char ch;
@@ -56,10 +57,15 @@ char **getList() {
 } 
 
 void freeList(char **list) {
-    for (int i = 0; list[i]; i++) {
+    int i;
+    if (list == NULL)
+        return;
+    for (i = 0; list[i] != NULL; i++) {
         free(list[i]);
     }
+    free(list[i]);
     free(list);
+    return;
 }
 
 
