@@ -1,5 +1,3 @@
-sources:
-	gcc sources/version1.c -o bin/version1 -Wall -Werror -lm -fsanitize=address,leak
-clean:
-	rm bin/version1
-	rmdir bin
+CFLAGS = -Wall -Werror -lm -g
+main: src/main.c
+	gcc src/$@.c -o bin/$@ $(CFLAGS)
