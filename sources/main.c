@@ -22,7 +22,7 @@ char *getWord(char *end) {
         *end = ch;
         return NULL;
     }
-    while (i == 0 && (ch == ' ' || ch == '\t' )) { 
+    while (i == 0 && (ch == ' ' || ch == '\t' )) {
         ch = getchar();
         if (ch == '\n') {
             *end = ch;
@@ -52,8 +52,8 @@ char **getList() {
     }
     list = (char **)realloc(list, (i + 1) * sizeof(char*));
     list[i] = NULL;
-    return list; 
-} 
+    return list;
+}
 
 void freeList(char **list) {
     for (int i = 0; list[i]; i++) {
@@ -76,8 +76,7 @@ int isExit(char **list) {
 }
 
 void pipeForTwo(char **list, int iForP) {
-    int fdForP[2];
-    int i, k, j, p;
+    int i, k, j;
     char **cmd_A, **cmd_B;
     cmd_A = (char **)malloc((iForP + 1) * sizeof(char*));
     for (i = 0; i < iForP; i++) {
@@ -92,7 +91,7 @@ void pipeForTwo(char **list, int iForP) {
     k = 0;
     for (j = iForP + 1; j < i;j++) {
         cmd_B[k] = list[j];
-        k++; 
+        k++;
     }
     cmd_B[k] = NULL;
     list[iForP] = NULL;
@@ -110,25 +109,25 @@ char ***getCmdArr(char **list, int n) {
     int pipePosition = 0;
     int lstPipePos = 0;
     int i = 0;
-    //ls -l | grep .txt | sort 
+    //ls -l | grep .txt | sort
     char ***cmdArr = NULL;
     cmdArr = (char ***)malloc((n + 1) * sizeof(char **));
     while (list[i] != NULL) {
         if(strcmp(list[i], "|") == 0) {
             cmdArr[j] = (char **)malloc((i - lstPipePos + 1) * sizeof(char *));
             pipePosition = i;
-            for(int i = 0; i < pipePosition - lstPipePos; i++) { 
+            for(int i = 0; i < pipePosition - lstPipePos; i++) {
                 cmdArr[j][i] = list[i + lstPipePos];
             }
             cmdArr[j][pipePosition - lstPipePos] = NULL;
             lstPipePos = pipePosition + 1;
-            j++; 
-        } 
-        i++; 
-    }   
+            j++;
+        }
+        i++;
+    }
     cmdArr[j] = (char **)malloc((i - lstPipePos + 1) * sizeof(char *));
     pipePosition = i;
-    for(int i = 0; i < pipePosition - lstPipePos; i++) { 
+    for(int i = 0; i < pipePosition - lstPipePos; i++) {
         cmdArr[j][i] = list[i + lstPipePos];
     }
     cmdArr[j][pipePosition - lstPipePos] = NULL;
@@ -163,17 +162,17 @@ void runManyCommands(char **list, int *iForP, int n) {
             waitpid(pid, NULL, 0);
         }
     }
-    
+
 }
 
 int *background_pids = NULL;
-int count_background = 0; 
+int count_background = 0;
 
 int flow(char **list) {
     int flag = 0, fd = 0, i = 0, iForP = 0, n = 0;
     int pid;
     int background = 0;
-    char * getenv (const char * name ); 
+    char * getenv (const char * name );
     int setenv (const char * name, const char * value, int overwrite);
     const char *home = getenv("HOME");
     while (list[i] != NULL) {
@@ -189,7 +188,7 @@ int flow(char **list) {
             break;
         } else if (strcmp(list[i], ">") == 0) {
             fd = open(list[i + 1], O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-            flag = 1;       
+            flag = 1;
             if (fd < 0) {
                 perror("Open failed");
                 exit(1);
@@ -228,7 +227,6 @@ int flow(char **list) {
                 background_pids[count_background - 1] = pid;
             }
         } else {
-            int tmp;
             if (fd) {
                 dup2(fd, flag);
             }
@@ -243,16 +241,17 @@ int flow(char **list) {
         close(fd);
     }
     fd = 0;
+    return 0;
 }
 
 void handler(int signo) {
     puts("received SIGINT");
     if(pid != 1) {
         kill(pid, SIGINT);
-    } 
+    }
 
 }
-int main(void) {    
+int main(void) {
     printf("SUPER EVA'S TRMNL >>");
     char **list = getList();
     signal(SIGINT, handler);
